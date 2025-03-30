@@ -27,4 +27,8 @@ export default {
   logging: {
     level: process.env.LOG_LEVEL || 'info',
   },
+
+  geocoding: {
+    provider: process.env.GEOCODING_PROVIDER_URL,
+  },
 };

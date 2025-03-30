@@ -26,7 +26,7 @@ export class AuthRoutes {
       '/register',
       [registerUserValidator, validate as any],
       (req: Request, res: Response) => {
-        return authController.register(req, res);
+        authController.register(req, res);
       },
     );
 
@@ -34,7 +34,7 @@ export class AuthRoutes {
       '/login',
       [loginUserValidator, validate as any],
       (req: Request, res: Response) => {
-        return authController.login(req, res);
+        authController.login(req, res);
       },
     );
 

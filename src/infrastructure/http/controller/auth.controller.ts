@@ -12,7 +12,7 @@ export class AuthController {
     private loginUserUseCase: LoginUseCase,
   ) {}
 
-  async register(req: Request, res: Response) {
+  async register(req: Request, res: Response): Promise<void> {
     try {
       const user = await this.registerUseCase.execute(req.body);
 
@@ -26,7 +26,7 @@ export class AuthController {
     }
   }
 
-  async login(req: Request, res: Response) {
+  async login(req: Request, res: Response): Promise<void> {
     try {
       const authResponse = await this.loginUserUseCase.execute(req.body);
 
@@ -36,20 +36,4 @@ export class AuthController {
       res.status(500).json({ message: error.message });
     }
   }
-
-  //   async getProfile(req: Request, res: Response): Promise<Response> {
-  //     // try {
-  //     //   // req.user ya contiene la información del usuario autenticado
-  //     //   return res.status(200).json({
-  //     //     user: {
-  //     //       id: req.user.id,
-  //     //       email: req.user.email,
-  //     //       role: req.user.role,
-  //     //     },
-  //     //   });
-  //     // } catch (error) {
-  //     //   logger.error('Error in getProfile controller', error);
-  //     //   return res.status(500).json({ message: 'Error al obtener el perfil' });
-  //     // }
-  //   }
 }

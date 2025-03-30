@@ -1,9 +1,11 @@
 import express, { Router } from 'express';
+import http from 'http';
 import compression from 'compression';
 import helmet from 'helmet';
 import cors from 'cors';
 import logger from '../logger';
 import { initializeDatabase } from '../database/database.config';
+import { WebSocketService } from '../services/websocket/websocket.service';
 
 interface Options {
   port: number;
@@ -13,6 +15,7 @@ interface Options {
 
 export class Server {
   private app = express();
+  private httpServer: http.Server;
   private readonly port: number;
   private readonly routes: Router;
 
@@ -20,6 +23,8 @@ export class Server {
     const { port, routes } = options;
     this.port = port;
     this.routes = routes;
+
+    this.httpServer = http.createServer(this.app);
   }
 
   async start() {
@@ -44,7 +49,9 @@ export class Server {
       });
     });
 
-    this.app.listen(this.port, () => {
+    WebSocketService.getInstance(this.httpServer);
+
+    this.httpServer.listen(this.port, () => {
       logger.info(`Server running on port ${this.port}`);
     });
 
