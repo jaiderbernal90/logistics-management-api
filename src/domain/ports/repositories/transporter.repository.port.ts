@@ -7,4 +7,5 @@ export interface TransporterRepository {
     id: number,
     isAvailable: boolean,
   ): Promise<TransporterDto | null>;
+  findAll(): Promise<TransporterDto[]>;
 }

@@ -61,4 +61,19 @@ export class MysqlTransporterRepository implements TransporterRepository {
       throw new Error('Error updating transporter: ' + error.message);
     }
   }
+  async findAll(): Promise<TransporterDto[]> {
+    try {
+      const query = `SELECT * FROM transporters ORDER BY name`;
+      const results = await db.query(query);
+
+      if (!results || results.length === 0) {
+        return [];
+      }
+
+      return results as TransporterDto[];
+    } catch (error) {
+      logger.error('Error finding all transporters', error);
+      throw new Error('Error finding transporters: ' + error.message);
+    }
+  }
 }

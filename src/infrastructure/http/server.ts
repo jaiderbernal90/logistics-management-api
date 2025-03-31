@@ -6,6 +6,7 @@ import cors from 'cors';
 import logger from '../logger';
 import { initializeDatabase } from '../database/database.config';
 import { WebSocketService } from '../services/websocket/websocket.service';
+import { setupSwagger } from '../docs/swagger.config';
 
 interface Options {
   port: number;
@@ -28,13 +29,17 @@ export class Server {
   }
 
   async start() {
+
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(compression());
     this.app.use(helmet());
     this.app.use(cors());
 
-    this.app.use('/api/v1', this.routes);
+    WebSocketService.getInstance(this.httpServer);
+
+    // Configurar Swagger
+    setupSwagger(this.app);
 
     const dbConnected = await initializeDatabase();
     if (!dbConnected) {
@@ -49,7 +54,7 @@ export class Server {
       });
     });
 
-    WebSocketService.getInstance(this.httpServer);
+    this.app.use('/api/v1', this.routes);
 
     this.httpServer.listen(this.port, () => {
       logger.info(`Server running on port ${this.port}`);

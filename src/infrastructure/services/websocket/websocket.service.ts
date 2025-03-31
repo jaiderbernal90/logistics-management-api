@@ -30,7 +30,6 @@ export class WebSocketService implements IWebSocketService {
     this.io.on('connection', (socket: Socket) => {
       logger.info(`Client connected: ${socket.id}`);
 
-      // Cliente se suscribe a actualizaciones de un envío específico
       socket.on('subscribe', (trackingNumber: string) => {
         logger.info(
           `Client ${socket.id} subscribed to tracking: ${trackingNumber}`,
@@ -49,7 +48,6 @@ export class WebSocketService implements IWebSocketService {
         });
       });
 
-      // Cliente deja de seguir un envío
       socket.on('unsubscribe', (trackingNumber: string) => {
         logger.info(
           `Client ${socket.id} unsubscribed from tracking: ${trackingNumber}`,
@@ -71,7 +69,6 @@ export class WebSocketService implements IWebSocketService {
         });
       });
 
-      // Manejar errores del socket
       socket.on('error', (error) => {
         logger.error(`Socket error for client ${socket.id}:`, error);
       });
@@ -90,7 +87,6 @@ export class WebSocketService implements IWebSocketService {
     return WebSocketService.instance;
   }
 
-  // Método para notificar actualizaciones de estado
   public notifyStatusUpdate(
     trackingNumber: string,
     data: WebSocketMessage,
@@ -111,7 +107,6 @@ export class WebSocketService implements IWebSocketService {
     );
   }
 
-  // Método para comprobar si hay clientes activos para un número de seguimiento
   public hasActiveListeners(trackingNumber: string): boolean {
     return (
       this.trackingRooms.has(trackingNumber) &&
@@ -119,7 +114,6 @@ export class WebSocketService implements IWebSocketService {
     );
   }
 
-  // Método para obtener estadísticas
   public getStats(): any {
     return {
       totalConnections: this.io.engine.clientsCount,

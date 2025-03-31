@@ -1,10 +1,11 @@
 import Redis from 'ioredis';
 import envs from '@/infrastructure/config/envs';
 import { createLogger } from '@/infrastructure/logger';
+import { CacheService } from '@/domain/ports/services/cache.service.port';
 
 const logger = createLogger('redis-service');
 
-class RedisService {
+export class RedisService implements CacheService {
   private client: Redis;
 
   constructor() {

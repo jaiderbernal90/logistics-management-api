@@ -1,8 +1,8 @@
 export interface WebSocketMessage {
-  tracking_number: string;
-  state: string;
+  trackingNumber: string;
+  status: string;
   location: string;
-  timestamp: Date;
+  created_at: Date;
   additional_info?: string;
 }
 

@@ -6,24 +6,59 @@ import { Shipment, ShipmentState } from '@/domain/entities/shipment.entity';
 import { PackageRepository } from '@/domain/ports/repositories/package.repository.port';
 import { ShipmentRepository } from '@/domain/ports/repositories/shipment.repository.port';
 import { getTrackingNumber } from '@/infrastructure/utils/tracking-number';
-import { MysqlOrderStatusRepository } from '@/infrastructure/persistence/repositories/order-status.repository.mysql';
+import { createLogger } from '@/infrastructure/logger';
+import { Package } from '@/domain/entities/package.entity';
+import { OrderStatusRepository } from '@/domain/ports/repositories/order-status.port';
+
+const logger = createLogger('create-shipment-use-case');
 
 export class CreateShipmentUseCase {
-  private orderStatusRepository: MysqlOrderStatusRepository;
-
   constructor(
     private readonly shipmentRepository: ShipmentRepository,
     private readonly packageRepository: PackageRepository,
-  ) {
-    this.orderStatusRepository = new MysqlOrderStatusRepository();
-  }
+    private readonly orderStatusRepository: OrderStatusRepository,
+  ) {}
 
   async execute(
     shipmentData: CreateShipmentDto,
     userId: number,
   ): Promise<ShipmentDto> {
-    const trackingNumber = getTrackingNumber();
+    try {
+      const trackingNumber = this.generateTrackingNumber();
 
+      const createdShipment = await this.createShipment(
+        shipmentData,
+        userId,
+        trackingNumber,
+      );
+
+      await this.createInitialStatus(
+        createdShipment.id,
+        shipmentData.origin_address,
+      );
+
+      const createdPackage = await this.createPackage(
+        shipmentData.package,
+        userId,
+        createdShipment.id,
+      );
+
+      return this.createShipmentDto(createdShipment, createdPackage);
+    } catch (error) {
+      logger.error('Error creating shipment', error);
+      throw error;
+    }
+  }
+
+  private generateTrackingNumber(): string {
+    return getTrackingNumber();
+  }
+
+  private async createShipment(
+    shipmentData: CreateShipmentDto,
+    userId: number,
+    trackingNumber: string,
+  ): Promise<Shipment> {
     const newShipment: Partial<Shipment> = {
       user_id: userId,
       tracking_number: trackingNumber,
@@ -33,37 +68,48 @@ export class CreateShipmentUseCase {
       destination_address: shipmentData.destination_address,
     };
 
-    const createdShipment = await this.shipmentRepository.create(newShipment);
+    return await this.shipmentRepository.create(newShipment);
+  }
 
+  private async createInitialStatus(
+    shipmentId: number,
+    location: string,
+  ): Promise<void> {
     await this.orderStatusRepository.create({
-      shipment_id: createdShipment.id,
+      shipment_id: shipmentId,
       status: ShipmentState.EN_ESPERA,
-      location: shipmentData.origin_address,
+      location: location,
     });
+  }
 
-    const packageData = shipmentData.package;
-    const createdPackage = await this.packageRepository.create(
-      packageData,
-      userId,
-      createdShipment.id,
-    );
+  private async createPackage(
+    packageData: CreateShipmentDto['package'],
+    userId: number,
+    shipmentId: number,
+  ): Promise<Package> {
+    return await this.packageRepository.create(packageData, userId, shipmentId);
+  }
 
+  private createShipmentDto(
+    shipment: Shipment,
+    packageData: Package,
+  ): ShipmentDto {
     return {
-      id: createdShipment.id,
-      tracking_number: createdShipment.tracking_number,
-      state: createdShipment.state,
-      date: createdShipment.date,
-      delivery_date: createdShipment.delivery_date,
-      origin_address: createdShipment.origin_address,
-      destination_address: createdShipment.destination_address,
+      id: shipment.id,
+      tracking_number: shipment.tracking_number,
+      state: shipment.state,
+      date: shipment.date,
+      delivery_date: shipment.delivery_date,
+      origin_address: shipment.origin_address,
+      destination_address: shipment.destination_address,
       package: {
-        id: createdPackage.id,
-        weight: createdPackage.weight,
-        size: createdPackage.size,
-        type_of_product: createdPackage.type_of_product,
-        description: createdPackage.description,
-        value: createdPackage.value,
-        shipment_id: createdPackage.shipment_id,
+        id: packageData.id,
+        weight: packageData.weight,
+        size: packageData.size,
+        type_of_product: packageData.type_of_product,
+        description: packageData.description,
+        value: packageData.value,
+        shipment_id: packageData.shipment_id,
       },
     };
   }

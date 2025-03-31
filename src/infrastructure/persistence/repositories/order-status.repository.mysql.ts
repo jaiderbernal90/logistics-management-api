@@ -1,14 +1,9 @@
 import { OrderStatus } from '@/domain/entities/order-status.entity';
+import { OrderStatusRepository } from '@/domain/ports/repositories/order-status.port';
 import { db } from '@/infrastructure/database/database.config';
 import { createLogger } from '@/infrastructure/logger';
 
 const logger = createLogger('order-status-repository');
-
-export interface OrderStatusRepository {
-  create(statusData: Partial<OrderStatus>): Promise<OrderStatus>;
-  findByShipmentId(shipmentId: number): Promise<OrderStatus[]>;
-}
-
 export class MysqlOrderStatusRepository implements OrderStatusRepository {
   constructor() {}
 
